@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="PublishConfigData" serverName="lab5">
+    <serverData>
+      <paths name="lab5">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/RS_Models" local="$PROJECT_DIR$" />
+          </mappings>
+        </serverdata>
+      </paths>
+    </serverData>
+  </component>
+</project>
