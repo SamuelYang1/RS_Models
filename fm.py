@@ -1,3 +1,8 @@
+"""
+references:
+code:https://github.com/babakx/fm_tensorflow/blob/master/fm_tensorflow.ipynb
+theory:https://www.jianshu.com/p/152ae633fb00
+"""
 import pandas as pd
 from itertools import count
 from collections import defaultdict
@@ -71,10 +76,10 @@ for epoch in range(epochs):
     perm = np.random.permutation(X_train.shape[0])
     for bX, bY in batcher(X_train[perm], Y_train[perm], batch_size):
         _,res=sess.run([optimizer,loss],feed_dict={x: bX.reshape(-1, p), y: bY.reshape(-1, 1)})
-        print(res)
+        #print(res)
 errors = []
 for bX, bY in batcher(X_test, Y_test):
     errors.append(sess.run(loss, feed_dict={x: bX.reshape(-1, p), y: bY.reshape(-1, 1)}))
-RMSE = np.sqrt(np.array(errors).mean())
+RMSE=np.sqrt(np.array(errors).mean())
 print('RMSE=',RMSE)
 sess.close()
