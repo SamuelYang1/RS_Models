@@ -89,8 +89,8 @@ for i in range(5):
 optimizer = optim.Adam(para, lr=0.001)
 criterion=nn.CrossEntropyLoss()
 sm=nn.Softmax()
-loss_all=[]
 for epoch in range(8):
+    loss_all = []
     for step, (batch_x, batch_y) in enumerate(train_loader):
         x=batch_x.cuda()
         y=batch_y.cuda()
