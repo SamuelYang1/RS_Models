@@ -4,6 +4,10 @@ references:
         DeepFM: A Factorization-Machine based Neural Network for CTR Prediction
         https://arxiv.org/abs/1703.04247
 """
+import numpy as np
+from itertools import count
+from collections import defaultdict
+import pandas as pd
 import torch
 import torch.optim as optim
 import torch.nn as nn
@@ -12,7 +16,7 @@ import os
 os.environ["CUDA_VISIBLE_DEVICES"] = "2"
 print(torch.cuda.is_available())
 class DeepFM(nn.Module):
-    def __init__(self,fieldsize=3,feasize=100,k=5):
+    def __init__(self,fieldsize=2,feasize=4677697,k=5):
         super(DeepFM, self).__init__()
         # build FM
         self.w=nn.Embedding(feasize,1)
@@ -28,9 +32,6 @@ class DeepFM(nn.Module):
             self.dnn.add_module("hidden_"+str(i),nn.Linear(hidden_layer[i-1], hidden_layer[i]))
             self.dnn.add_module("Relu_"+str(i),nn.ReLU())
         self.dnn.add_module("Out",nn.Linear(hidden_layer[len(hidden_layer)-1],1))
-
-    def embedding(self,input):
-        return input
     def forward(self, feature):
         res = torch.zeros(1).cuda()
         #2-order
@@ -49,9 +50,9 @@ class DeepFM(nn.Module):
         res+=self.dnn(V.reshape(-1))
         #return(torch.sigmoid(res))
         return res
-
 model=DeepFM().cuda()
-print(model.w)
+print(model)
+print(model.w.parameters())
 optimizer = optim.Adam(model.parameters(), lr=0.001)
 criterion = F.binary_cross_entropy_with_logits
 for i in range(4000):
