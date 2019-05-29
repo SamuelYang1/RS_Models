@@ -9,7 +9,7 @@ import torch
 import torch.optim as optim
 import torch.nn as nn
 import os
-os.environ["CUDA_VISIBLE_DEVICES"] = "2"
+os.environ["CUDA_VISIBLE_DEVICES"] = "3"
 #os.environ['CUDA_LAUNCH_BLOCKING'] = "1"
 print(torch.cuda.is_available())
 class DeepFM(nn.Module):
@@ -19,7 +19,7 @@ class DeepFM(nn.Module):
         self.w=nn.Embedding(feasize,1)
         self.v=nn.Embedding(feasize,k)
         #build DNN
-        hidden_layer = [fieldsize*k,16,16,16]
+        hidden_layer = [fieldsize*k,16,16]
         self.dnn=torch.nn.Sequential()
         for i in range(len(hidden_layer)-1):
             self.dnn.add_module("Linear_"+str(i),nn.Linear(hidden_layer[i], hidden_layer[i+1]))
@@ -93,22 +93,26 @@ for epoch in range(50):
         loss.backward()
         optimizer.step()
         loss_all.append(loss.item())
-        #test
         if (step+1)%200==0:
-            num_correct=0
-            num_all=0
             for i in range(5):
-                torch.save(models[i],save_path+str(i))
-            for _, (tx, ty) in enumerate(test_loader):
-                r = torch.Tensor().cuda()
-                for i in range(5):
-                    resi = models[i](tx.cuda())
-                    r = torch.cat((r, resi), dim=1)
-                r = sm(r)
-                r = torch.argmax(r, dim=1)
-                r+=1
-                num_correct += (r == ty.cuda()).sum()
-                num_all+=r.size(0)
-            acc=float(num_correct) / num_all
-            print('Epoch: ', epoch, '| Step: ', step+1, '| Loss: ',sum(loss_all)/len(loss_all),'| ACC: ',acc)
+                torch.save(models[i], save_path + str(i))
+            print('Epoch: ', epoch, '| Step: ', step+1, '| Train_Loss: ',sum(loss_all)/len(loss_all))
             loss_all=[]
+    #test
+    num_correct = 0
+    num_all = 0
+    test_loss = 0
+    for _, (tx, ty) in enumerate(test_loader):
+        y_c = ty.cuda()
+        y_c -= 1
+        r = torch.Tensor().cuda()
+        for i in range(5):
+            resi = models[i](tx.cuda())
+            r = torch.cat((r, resi), dim=1)
+        test_loss += criterion(r, y_c).item() * r.size(0)
+        r = sm(r)
+        r = torch.argmax(r, dim=1)
+        num_correct += (r == y_c).sum()
+        num_all += r.size(0)
+    acc = float(num_correct) / num_all
+    print('Epoch: ', epoch, '| Test_Loss: ',test_loss / num_all, '| Test_ACC: ', acc)

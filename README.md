@@ -14,4 +14,4 @@ Example:\
 Train_data:Test_data=8:2
 
 Result:\
-Epoch:  5 | Step:  2000 | Loss:  0.9516314125061035 | ACC:  0.42268340983464087
+Epoch:  5 | Step:  2000 | Train_Loss:  0.958383573293686 | Test_Loss:  2.0478044766193415 | Test_ACC:  0.4262280520698806
