@@ -93,6 +93,7 @@ for epoch in range(50):
         loss.backward()
         optimizer.step()
         loss_all.append(loss.item())
+        #test
         if (step+1)%200==0:
             num_correct=0
             num_all=0
