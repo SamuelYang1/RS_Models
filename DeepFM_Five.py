@@ -1,8 +1,7 @@
 """
-references:
-    theory:
-        DeepFM: A Factorization-Machine based Neural Network for CTR Prediction
-        https://arxiv.org/abs/1703.04247
+reference:
+DeepFM: A Factorization-Machine based Neural Network for CTR Prediction
+https://arxiv.org/abs/1703.04247
 """
 import torch.utils.data as Data
 import pandas as pd
@@ -21,31 +20,18 @@ class DeepFM(nn.Module):
         self.v=nn.Embedding(feasize,k)
 
         #build DNN
-        hidden_layer = [400,400,400,1]
+        hidden_layer = [fieldsize*k,16,16,16]
         self.dnn=torch.nn.Sequential()
-        self.dnn.add_module("hidden_0",nn.Linear(fieldsize*k,hidden_layer[0]))
-        self.dnn.add_module("Relu_0",nn.ReLU())
-        for i in range(1,len(hidden_layer)):
-            self.dnn.add_module("hidden_"+str(i),nn.Linear(hidden_layer[i-1], hidden_layer[i]))
+        for i in range(len(hidden_layer)-1):
+            self.dnn.add_module("Linear_"+str(i),nn.Linear(hidden_layer[i], hidden_layer[i+1]))
             self.dnn.add_module("Relu_"+str(i),nn.ReLU())
         self.dnn.add_module("Out",nn.Linear(hidden_layer[len(hidden_layer)-1],1))
     def forward(self, feature):
         batchsize=feature.shape[0]
         #2-order
-        q=feature
-        V=self.v(q)
-        # res2 = torch.zeros(batchsize, 1).cuda()
-        # d=list(V.shape)[1]
-        # for k in range(batchsize):
-        #     for i in range(d):
-        #          for j in range(i+1,d):
-        #              res2[k]+=V[k][i]@(V[k][j].reshape(-1,1))
-        try:
-            res=0.5*((V.sum(dim=1)).pow(2)-(V.pow(2)).sum(1)).sum(dim=1)
-        except:
-            print(V)
+        V=self.v(feature)
+        res=0.5*((V.sum(dim=1)).pow(2)-(V.pow(2)).sum(1)).sum(dim=1)
         res=res.reshape(batchsize,1)
-
         #1-order
         W=self.w(torch.cuda.LongTensor(feature))
         res+=W.sum(dim=1)
@@ -82,14 +68,14 @@ test_loader = Data.DataLoader(
 )
 #
 models=[DeepFM().cuda()for i in range(5)]
-#print(models)
+print(models[0])
 para=[]
 for i in range(5):
     para.append({'params':models[i].parameters()})
 optimizer = optim.Adam(para, lr=0.001)
 criterion=nn.CrossEntropyLoss()
 sm=nn.Softmax()
-for epoch in range(8):
+for epoch in range(50):
     loss_all = []
     for step, (batch_x, batch_y) in enumerate(train_loader):
         x=batch_x.cuda()
@@ -104,7 +90,7 @@ for epoch in range(8):
         loss.backward()
         optimizer.step()
         loss_all.append(loss.item())
-        if step%200==0:
+        if (step+1)%200==0:
             num_correct=0
             num_all=0
             for i in range(5):
@@ -120,5 +106,5 @@ for epoch in range(8):
                 num_correct += (r == ty.cuda()).sum()
                 num_all+=r.size(0)
             acc=float(num_correct) / num_all
-            print('Epoch: ', epoch, '| Step: ', step, '| Loss: ',sum(loss_all)/len(loss_all),'| ACC: ',acc)
+            print('Epoch: ', epoch, '| Step: ', step+1, '| Loss: ',sum(loss_all)/len(loss_all),'| ACC: ',acc)
             loss_all=[]
