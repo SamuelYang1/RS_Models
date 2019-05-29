@@ -18,7 +18,6 @@ class DeepFM(nn.Module):
         # build FM
         self.w=nn.Embedding(feasize,1)
         self.v=nn.Embedding(feasize,k)
-
         #build DNN
         hidden_layer = [fieldsize*k,16,16,16]
         self.dnn=torch.nn.Sequential()
@@ -40,6 +39,8 @@ class DeepFM(nn.Module):
         res+=self.dnn(emb)
         #return(torch.sigmoid(res))
         return res
+
+
 #data_input
 Batchsize=3000
 train_file_path="data/Electronics_train.csv"
@@ -66,7 +67,9 @@ test_loader = Data.DataLoader(
     shuffle=False,
     num_workers=2,
 )
-#
+
+
+#train
 models=[DeepFM().cuda()for i in range(5)]
 print(models[0])
 para=[]
