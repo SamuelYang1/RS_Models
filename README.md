@@ -6,7 +6,7 @@ user,item,rating,timestamp\
 Example:\
 AKM1MP6P0OYPR,0132793040,5.0,1365811200
 
-Processed data format(also input data format):\
+Processed data format(also as input data format):\
 id_user,id_item,rating\
 Example:\
 3017394,115856,1
