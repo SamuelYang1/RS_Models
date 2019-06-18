@@ -1,7 +1,7 @@
 """
 reference:
-DeepFM: A Factorization-Machine based Neural Network for CTR Prediction
-https://arxiv.org/abs/1703.04247
+Wide & Deep Learning for Recommender Systems
+https://arxiv.org/pdf/1606.07792.pdf
 """
 import torch.utils.data as Data
 import pandas as pd
@@ -15,38 +15,42 @@ import sklearn
 os.environ["CUDA_VISIBLE_DEVICES"] = "3"
 #os.environ['CUDA_LAUNCH_BLOCKING'] = "1"
 print(torch.cuda.is_available())
-class DeepFM(nn.Module):
-    def __init__(self,fieldsize=39,feasize=2325450,k=10):
-        super(DeepFM, self).__init__()
-        # build FM
-        self.w=nn.Embedding(feasize,1)
-        self.v=nn.Embedding(feasize,k)
-        #build DNN
-        hidden_layer = [fieldsize*k,400,400,400]
+class WideDeep(nn.Module):
+    def __init__(self,fieldsize=39,feasize=2325450,k=32):
+        super(WideDeep, self).__init__()
+        self.fieldsize=fieldsize
+        self.feasize=feasize
+        # build Wide (working
+        # self.w2=nn.Embedding(feasize*feasize,1)
+        self.w1=nn.Embedding(feasize,1)
+        #build Deep
+        self.em=nn.Embedding(feasize,k)
+        hidden_layer = [fieldsize*k,1024,512,256]
         self.dnn=torch.nn.Sequential()
         for i in range(len(hidden_layer)-1):
             self.dnn.add_module("Linear_"+str(i),nn.Linear(hidden_layer[i], hidden_layer[i+1]))
-            self.dnn.add_module("Drop_"+str(i),nn.Dropout(0.5))
+            # self.dnn.add_module("Drop_"+str(i),nn.Dropout(0.5))
             self.dnn.add_module("Relu_"+str(i),nn.ReLU())
         self.dnn.add_module("Out",nn.Linear(hidden_layer[len(hidden_layer)-1],1))
+
     def forward(self, feature):
         batchsize=feature.shape[0]
-        #2-order
-        V=self.v(feature)
-        res=0.5*((V.sum(dim=1)).pow(2)-(V.pow(2)).sum(dim=1)).sum(dim=1)
-        # n=V.size(1)
-        # tmp=torch.Tensor([0])
-        # for i in range(n):
-        #     for j in range(i+1,n):
-        #         tmp+=(V[0][i]*V[0][j]).sum(dim=0)
-        res=res.reshape(batchsize,1)
-        #1-order
-        W=self.w(torch.cuda.LongTensor(feature))
-        res+=W.sum(dim=1)
-        #dnn
-        emb=V.reshape(batchsize,-1)
+        #deep
+        emb = self.em(feature).reshape(batchsize, -1)
         outdnn=self.dnn(emb)
-        res+=outdnn
+        res=outdnn
+        #wide
+        #1 order
+        res+=self.w1(feature).sum(dim=1)
+        #2 order
+        # cross_feature=torch.Tensor(batchsize,self.fieldsize*(self.fieldsize-1)//2)
+        # for i in range(batchsize):
+        #     num=0
+        #     for j in range(self.fieldsize):
+        #         for k in range(j+1,self.fieldsize):
+        #             cross_feature[i][num]=feature[i][j]*self.feasize+feature[i][k]
+        #             num+=1
+        # res+=self.w2(cross_feature).sum(dim=1)
         res=torch.sigmoid(res)
         res = res.reshape(-1)
         return res
@@ -54,9 +58,9 @@ class DeepFM(nn.Module):
 
 #data_input
 Batchsize=300
-train_file_path="data/train.csv"
-test_file_path="data/test.csv"
-save_path="savemodel/smodel"
+train_file_path="../data/train.csv"
+test_file_path="../data/test.csv"
+save_path="../savemodel/smodel"
 labcols = ['lable']
 feacols=[]
 for i in range(13):
@@ -86,9 +90,9 @@ test_loader = Data.DataLoader(
 
 
 #train
-model=DeepFM().cuda()
+model=WideDeep().cuda()
 print(model)
-optimizer = optim.Adam(model.parameters(), lr=0.0001)
+optimizer = optim.Adagrad(model.parameters(), lr=0.001)
 criterion=nn.BCELoss()
 for epoch in range(50):
     loss_all = []
