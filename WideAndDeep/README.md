@@ -1,4 +1,4 @@
-$ python3 DeepFM.py
+$ python3 WideAndDeep.py
 
 Data:\
 Criteo Dataset(Kaggle Display Advertising Challenge Dataset)\
