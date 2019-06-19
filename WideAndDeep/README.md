@@ -17,5 +17,5 @@ Example:\
 Train_data:Test_data=9:1
 
 Result:\
-Epoch:  2 | Step:  120000 | Train_Loss:  0.6088612224340438\
-Epoch:  2 | Test_Loss:  0.6151199716528871 | Test_ACC:  0.7423044933288963 | Test_AUC:  0.7202348453060403
+Epoch:  34 | Step:  120000 | Train_Loss:  0.5165854301184416\
+Epoch:  34 | Test_Loss:  0.5373787786544046 | Test_ACC:  0.7642929013838544 | Test_AUC:  0.7502840814318427
